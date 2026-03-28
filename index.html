@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaIntelX Analytics</title>
+    <!-- Use Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for modern thin icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobile-overlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <i class="ph ph-waves brand-icon"></i>
+                <span class="brand-text">AquaIntelX</span>
+                <button class="close-sidebar-btn" id="close-sidebar-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-target="analytics">
+                    <i class="ph ph-chart-line-up"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-target="history">
+                    <i class="ph ph-clock-counter-clockwise"></i>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item" data-target="about">
+                    <i class="ph ph-info"></i>
+                    <span>About</span>
+                </a>
+                <a href="#" class="nav-item" data-target="contact">
+                    <i class="ph ph-envelope-simple"></i>
+                    <span>Contact</span>
+                </a>
+                <a href="login.html" class="nav-item" id="logout-btn" style="margin-top: auto; color: var(--danger);">
+                    <i class="ph ph-sign-out"></i>
+                    <span>Sign Out</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="action-btn mobile-menu-btn" id="mobile-menu-btn" aria-label="Open Menu">
+                        <i class="ph ph-list"></i>
+                    </button>
+                    <div>
+                        <h1 class="page-title" id="main-title">Live Analytics</h1>
+                        <p class="page-subtitle" id="main-subtitle">Real-time telemetry and anomaly detection</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="system-status">
+                        <div class="status-indicator active"></div>
+                        <span>System Online</span>
+                    </div>
+                    <button class="action-btn theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+                        <i class="ph ph-sun" id="theme-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ANALYTICS SECTION -->
+            <div id="analytics" class="page-section active">
+                <section class="metrics-grid">
+                    <!-- Temperature Card -->
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon temp">
+                                <i class="ph ph-thermometer"></i>
+                            </div>
+                            <span class="metric-title">Temperature</span>
+                        </div>
+                        <div class="metric-body">
+                            <h2 class="metric-value" id="temp-val">22.4<span class="unit">°C</span></h2>
+                            <div class="metric-trend positive">
+                                <i class="ph ph-trend-down"></i>
+                                <span>-0.5° from avg</span>
+                            </div>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+
+                    <!-- Turbidity Card -->
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon turb">
+                                <i class="ph ph-drop-half-bottom"></i>
+                            </div>
+                            <span class="metric-title">Turbidity</span>
+                        </div>
+                        <div class="metric-body">
+                            <h2 class="metric-value" id="turb-val">1.2<span class="unit">NTU</span></h2>
+                            <div class="metric-trend positive">
+                                <i class="ph ph-check-circle"></i>
+                                <span>Optimal</span>
+                            </div>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+
+                    <!-- TDS Card -->
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon tds">
+                                <i class="ph ph-grains"></i>
+                            </div>
+                            <span class="metric-title">TDS Level</span>
+                        </div>
+                        <div class="metric-body">
+                            <h2 class="metric-value" id="tds-val">145<span class="unit">ppm</span></h2>
+                            <div class="metric-trend warning">
+                                <i class="ph ph-trend-up"></i>
+                                <span>+12 ppm today</span>
+                            </div>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+
+                    <!-- PH Level Card -->
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon ph">
+                                <i class="ph ph-flask"></i>
+                            </div>
+                            <span class="metric-title">pH Level</span>
+                        </div>
+                        <div class="metric-body">
+                            <h2 class="metric-value" id="ph-val">7.2</h2>
+                            <div class="metric-trend positive">
+                                <i class="ph ph-check-circle"></i>
+                                <span>Neutral</span>
+                            </div>
+                        </div>
+                        <div class="card-glow"></div>
+                    </div>
+                </section>
+
+                <section class="chart-section">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Water Quality Trends</h3>
+                            <div class="chart-actions">
+                                <select class="time-filter">
+                                    <option>Last 24 Hours</option>
+                                    <option>Last 7 Days</option>
+                                    <option>Last 30 Days</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="ai-insights">
+                        <h3>AI Insights</h3>
+                        <div class="insight-list">
+                            <div class="insight-item warning">
+                                <div class="insight-icon"><i class="ph ph-warning-circle"></i></div>
+                                <div class="insight-content">
+                                    <h4>TDS Anomaly Detected</h4>
+                                    <p>Slight upward trend in Total Dissolved Solids detected over the last 4 hours.</p>
+                                </div>
+                            </div>
+                            <div class="insight-item normal">
+                                <div class="insight-icon"><i class="ph ph-info"></i></div>
+                                <div class="insight-content">
+                                    <h4>pH Stabilization</h4>
+                                    <p>pH levels have remained perfectly stable around 7.2 following yesterday's rain.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- HISTORY SECTION -->
+            <div id="history" class="page-section">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Historical Logs</h3>
+                        <div class="header-actions-inline">
+                            <button class="btn btn-outline"><i class="ph ph-download-simple"></i> Export CSV</button>
+                            <button class="btn btn-primary"><i class="ph ph-funnel"></i> Filter</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Sensor Node</th>
+                                    <th>Temp (°C)</th>
+                                    <th>Turbidity (NTU)</th>
+                                    <th>pH</th>
+                                    <th>TDS (ppm)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Mar 28, 14:30:00</td>
+                                    <td><strong>Node-Alpha</strong></td>
+                                    <td>22.4</td>
+                                    <td>1.2</td>
+                                    <td>7.2</td>
+                                    <td>145</td>
+                                    <td><span class="status-badge optimal">Optimal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Mar 28, 14:15:00</td>
+                                    <td><strong>Node-Alpha</strong></td>
+                                    <td>22.5</td>
+                                    <td>1.1</td>
+                                    <td>7.1</td>
+                                    <td>142</td>
+                                    <td><span class="status-badge optimal">Optimal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Mar 28, 14:00:00</td>
+                                    <td><strong>Node-Beta</strong></td>
+                                    <td>21.8</td>
+                                    <td>3.5</td>
+                                    <td>6.8</td>
+                                    <td>210</td>
+                                    <td><span class="status-badge warning">Warning</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Mar 28, 13:45:00</td>
+                                    <td><strong>Node-Alpha</strong></td>
+                                    <td>22.4</td>
+                                    <td>1.2</td>
+                                    <td>7.2</td>
+                                    <td>138</td>
+                                    <td><span class="status-badge optimal">Optimal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Mar 28, 13:30:00</td>
+                                    <td><strong>Node-Gamma</strong></td>
+                                    <td>23.1</td>
+                                    <td>8.2</td>
+                                    <td>5.9</td>
+                                    <td>450</td>
+                                    <td><span class="status-badge critical">Critical</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABOUT SECTION -->
+            <div id="about" class="page-section">
+                <div class="about-grid">
+                    <div class="panel intro-panel">
+                        <div class="brand-large">
+                            <i class="ph ph-waves brand-icon"></i>
+                            <span class="brand-text">AquaIntelX</span>
+                        </div>
+                        <h2>Next-Gen Water Quality Monitoring</h2>
+                        <p>AquaIntelX leverages advanced machine learning algorithms and high-frequency IoT sensors to provide real-time, actionable insights into municipal and industrial water supplies.</p>
+                        <p>Our mission is to proactively identify contaminants and anomalies before they impact public health or operational integrity.</p>
+                    </div>
+                    <div class="panel stats-panel">
+                        <h3>System Capability</h3>
+                        <div class="stats-list">
+                            <div class="stat-item">
+                                <span class="stat-val">99.9%</span>
+                                <span class="stat-label">Uptime</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-val">&lt;50ms</span>
+                                <span class="stat-label">Latency</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-val">256-bit</span>
+                                <span class="stat-label">Encryption</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTACT SECTION -->
+            <div id="contact" class="page-section">
+                <div class="contact-container">
+                    <div class="panel contact-info">
+                        <h3>Get in Touch</h3>
+                        <p>Need support or want to expand your AquaIntelX sensor network? Reach out to our engineering team.</p>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <i class="ph ph-map-pin"></i>
+                                <span>1200 Innovation Drive, Tech District</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="ph ph-envelope-simple"></i>
+                                <span>support@aquaintelx.com</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="ph ph-phone"></i>
+                                <span>+1 (800) 555-0199</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel contact-form-panel">
+                        <form class="contact-form" id="contactForm">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" placeholder="john@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select required>
+                                    <option value="" disabled selected>Select a topic</option>
+                                    <option>Technical Support</option>
+                                    <option>Hardware Request</option>
+                                    <option>Billing</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea placeholder="How can we help you?" rows="4" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary submit-btn">Send Message</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
