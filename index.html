@@ -83,10 +83,10 @@
                             <span class="metric-title">Temperature</span>
                         </div>
                         <div class="metric-body">
-                            <h2 class="metric-value" id="temp-val">22.4<span class="unit">°C</span></h2>
-                            <div class="metric-trend positive">
-                                <i class="ph ph-trend-down"></i>
-                                <span>-0.5° from avg</span>
+                            <h2 class="metric-value" id="temp-val">--<span class="unit">°C</span></h2>
+                            <div class="metric-trend">
+                                <i class="ph ph-spinner-gap" style="animation: spin 1s linear infinite;"></i>
+                                <span>Awaiting data...</span>
                             </div>
                         </div>
                         <div class="card-glow"></div>
@@ -101,10 +101,10 @@
                             <span class="metric-title">Turbidity</span>
                         </div>
                         <div class="metric-body">
-                            <h2 class="metric-value" id="turb-val">1.2<span class="unit">NTU</span></h2>
-                            <div class="metric-trend positive">
-                                <i class="ph ph-check-circle"></i>
-                                <span>Optimal</span>
+                            <h2 class="metric-value" id="turb-val">--<span class="unit">NTU</span></h2>
+                            <div class="metric-trend">
+                                <i class="ph ph-spinner-gap" style="animation: spin 1s linear infinite;"></i>
+                                <span>Awaiting data...</span>
                             </div>
                         </div>
                         <div class="card-glow"></div>
@@ -119,10 +119,10 @@
                             <span class="metric-title">TDS Level</span>
                         </div>
                         <div class="metric-body">
-                            <h2 class="metric-value" id="tds-val">145<span class="unit">ppm</span></h2>
-                            <div class="metric-trend warning">
-                                <i class="ph ph-trend-up"></i>
-                                <span>+12 ppm today</span>
+                            <h2 class="metric-value" id="tds-val">--<span class="unit">ppm</span></h2>
+                            <div class="metric-trend">
+                                <i class="ph ph-spinner-gap" style="animation: spin 1s linear infinite;"></i>
+                                <span>Awaiting data...</span>
                             </div>
                         </div>
                         <div class="card-glow"></div>
@@ -137,10 +137,10 @@
                             <span class="metric-title">pH Level</span>
                         </div>
                         <div class="metric-body">
-                            <h2 class="metric-value" id="ph-val">7.2</h2>
-                            <div class="metric-trend positive">
-                                <i class="ph ph-check-circle"></i>
-                                <span>Neutral</span>
+                            <h2 class="metric-value" id="ph-val">--</h2>
+                            <div class="metric-trend">
+                                <i class="ph ph-spinner-gap" style="animation: spin 1s linear infinite;"></i>
+                                <span>Awaiting data...</span>
                             </div>
                         </div>
                         <div class="card-glow"></div>
@@ -165,19 +165,14 @@
                     </div>
                     <div class="ai-insights">
                         <h3>AI Insights</h3>
-                        <div class="insight-list">
-                            <div class="insight-item warning">
-                                <div class="insight-icon"><i class="ph ph-warning-circle"></i></div>
-                                <div class="insight-content">
-                                    <h4>TDS Anomaly Detected</h4>
-                                    <p>Slight upward trend in Total Dissolved Solids detected over the last 4 hours.</p>
-                                </div>
-                            </div>
+                        <div class="insight-list" id="ai-insights-list">
                             <div class="insight-item normal">
-                                <div class="insight-icon"><i class="ph ph-info"></i></div>
+                                <div class="insight-icon">
+                                    <i class="ph ph-spinner-gap" style="animation: spin 1s linear infinite; display: inline-block;"></i>
+                                </div>
                                 <div class="insight-content">
-                                    <h4>pH Stabilization</h4>
-                                    <p>pH levels have remained perfectly stable around 7.2 following yesterday's rain.</p>
+                                    <h4>System Ready</h4>
+                                    <p>Waiting for hardware telemetry to begin analysis...</p>
                                 </div>
                             </div>
                         </div>
@@ -208,51 +203,12 @@
                                     <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="history-table-body">
                                 <tr>
-                                    <td>Mar 28, 14:30:00</td>
-                                    <td><strong>Node-Alpha</strong></td>
-                                    <td>22.4</td>
-                                    <td>1.2</td>
-                                    <td>7.2</td>
-                                    <td>145</td>
-                                    <td><span class="status-badge optimal">Optimal</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 28, 14:15:00</td>
-                                    <td><strong>Node-Alpha</strong></td>
-                                    <td>22.5</td>
-                                    <td>1.1</td>
-                                    <td>7.1</td>
-                                    <td>142</td>
-                                    <td><span class="status-badge optimal">Optimal</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 28, 14:00:00</td>
-                                    <td><strong>Node-Beta</strong></td>
-                                    <td>21.8</td>
-                                    <td>3.5</td>
-                                    <td>6.8</td>
-                                    <td>210</td>
-                                    <td><span class="status-badge warning">Warning</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 28, 13:45:00</td>
-                                    <td><strong>Node-Alpha</strong></td>
-                                    <td>22.4</td>
-                                    <td>1.2</td>
-                                    <td>7.2</td>
-                                    <td>138</td>
-                                    <td><span class="status-badge optimal">Optimal</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 28, 13:30:00</td>
-                                    <td><strong>Node-Gamma</strong></td>
-                                    <td>23.1</td>
-                                    <td>8.2</td>
-                                    <td>5.9</td>
-                                    <td>450</td>
-                                    <td><span class="status-badge critical">Critical</span></td>
+                                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                        <i class="ph ph-plugs" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                        No historical data available. Connect hardware to start logging.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

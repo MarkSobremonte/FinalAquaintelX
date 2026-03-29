@@ -21,10 +21,21 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.font.family = "'Outfit', sans-serif";
 
-    // Start with empty data, or initial historical data
-    let chartTimeLabels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'];
-    let turbData = [1.1, 1.2, 1.3, 1.2, 1.4, 1.25, 1.2];
-    let phData   = [7.1, 7.2, 7.2, 7.3, 7.2, 7.15, 7.2];
+    const LIVE_CHART_MAX_POINTS = 36;
+
+    const gradientFill3 = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientFill3.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+    gradientFill3.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+
+    const gradientFill4 = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientFill4.addColorStop(0, 'rgba(52, 211, 153, 0.35)');
+    gradientFill4.addColorStop(1, 'rgba(52, 211, 153, 0.0)');
+
+    let chartTimeLabels = [];
+    let tempSeries = [];
+    let turbSeries = [];
+    let tdsSeries = [];
+    let phSeries = [];
 
     const trendsChart = new Chart(ctx, {
         type: 'line',
@@ -32,40 +43,59 @@ document.addEventListener('DOMContentLoaded', () => {
             labels: chartTimeLabels,
             datasets: [
                 {
+                    label: 'Temperature (°C)',
+                    data: tempSeries,
+                    borderColor: '#f59e0b',
+                    backgroundColor: gradientFill3,
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    yAxisID: 'yTemp'
+                },
+                {
                     label: 'Turbidity (NTU)',
-                    data: turbData,
+                    data: turbSeries,
                     borderColor: '#00e5ff',
                     backgroundColor: gradientFill,
                     borderWidth: 2,
-                    tension: 0.4,
+                    tension: 0.35,
                     fill: true,
-                    pointBackgroundColor: '#0a0e17',
-                    pointBorderColor: '#00e5ff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    yAxisID: 'y'
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    yAxisID: 'yTurb'
                 },
                 {
-                    label: 'pH Level',
-                    data: phData,
+                    label: 'TDS (ppm)',
+                    data: tdsSeries,
+                    borderColor: '#34d399',
+                    backgroundColor: gradientFill4,
+                    borderWidth: 2,
+                    tension: 0.35,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    yAxisID: 'yTds'
+                },
+                {
+                    label: 'pH',
+                    data: phSeries,
                     borderColor: '#8b5cf6',
                     backgroundColor: gradientFill2,
                     borderWidth: 2,
-                    tension: 0.4,
+                    tension: 0.35,
                     fill: true,
-                    pointBackgroundColor: '#0a0e17',
-                    pointBorderColor: '#8b5cf6',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    yAxisID: 'y1'
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    yAxisID: 'yPh'
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 0 },
             interaction: {
                 mode: 'index',
                 intersect: false,
@@ -75,8 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     position: 'top',
                     labels: {
                         usePointStyle: true,
-                        padding: 20,
-                        font: { size: 12, weight: '500' }
+                        padding: 14,
+                        font: { size: 11, weight: '500' }
                     }
                 },
                 tooltip: {
@@ -92,27 +122,71 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false }
+                    grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                    ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
                 },
-                y: {
+                yTemp: {
                     type: 'linear',
                     display: true,
                     position: 'left',
+                    title: { display: true, text: '°C', color: '#94a3b8', font: { size: 11 } },
                     grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-                    suggestedMin: 0,
-                    suggestedMax: 5
+                    suggestedMin: 10,
+                    suggestedMax: 35
                 },
-                y1: {
+                yTds: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    offset: true,
+                    title: { display: true, text: 'ppm', color: '#94a3b8', font: { size: 11 } },
+                    grid: { drawOnChartArea: false },
+                    suggestedMin: 0,
+                    suggestedMax: 500
+                },
+                yTurb: {
                     type: 'linear',
                     display: true,
                     position: 'right',
-                    grid: { drawOnChartArea: false }, // avoid overlapping grid lines
+                    title: { display: true, text: 'NTU', color: '#94a3b8', font: { size: 11 } },
+                    grid: { drawOnChartArea: false },
+                    suggestedMin: 0,
+                    suggestedMax: 5
+                },
+                yPh: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    offset: true,
+                    title: { display: true, text: 'pH', color: '#94a3b8', font: { size: 11 } },
+                    grid: { drawOnChartArea: false },
                     suggestedMin: 0,
                     suggestedMax: 14
                 }
             }
         }
     });
+
+    function pushLiveChartSample(sample) {
+        const t = sample.time instanceof Date ? sample.time : new Date();
+        const label = t.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        chartTimeLabels.push(label);
+        tempSeries.push(sample.temperature);
+        turbSeries.push(sample.turbidity);
+        tdsSeries.push(sample.tds);
+        phSeries.push(sample.ph);
+
+        while (chartTimeLabels.length > LIVE_CHART_MAX_POINTS) {
+            chartTimeLabels.shift();
+            tempSeries.shift();
+            turbSeries.shift();
+            tdsSeries.shift();
+            phSeries.shift();
+        }
+
+        trendsChart.update('none');
+    }
 
     // ==========================================
     // THEME TOGGLE
@@ -142,6 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateChartTheme(theme) {
         if (!trendsChart) return;
+
+        const yGrids = ['yTemp', 'yTds', 'yTurb', 'yPh'];
         
         if (theme === 'light') {
             Chart.defaults.color = '#64748b'; // --text-muted
@@ -151,7 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
             trendsChart.options.plugins.tooltip.borderColor = 'rgba(0,0,0,0.1)';
             
             trendsChart.options.scales.x.grid.color = 'rgba(0, 0, 0, 0.05)';
-            trendsChart.options.scales.y.grid.color = 'rgba(0, 0, 0, 0.05)';
+            yGrids.forEach((id) => {
+                const g = trendsChart.options.scales[id]?.grid;
+                if (g && 'color' in g) g.color = 'rgba(0, 0, 0, 0.05)';
+            });
             
             trendsChart.update();
         } else {
@@ -162,7 +241,10 @@ document.addEventListener('DOMContentLoaded', () => {
             trendsChart.options.plugins.tooltip.borderColor = 'rgba(255,255,255,0.1)';
             
             trendsChart.options.scales.x.grid.color = 'rgba(255, 255, 255, 0.05)';
-            trendsChart.options.scales.y.grid.color = 'rgba(255, 255, 255, 0.05)';
+            yGrids.forEach((id) => {
+                const g = trendsChart.options.scales[id]?.grid;
+                if (g && 'color' in g) g.color = 'rgba(255, 255, 255, 0.05)';
+            });
             
             trendsChart.update();
         }
@@ -171,13 +253,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // HARDWARE INTEGRATION (TELEMETRY MANAGER)
     // ==========================================
+    function normalizeTelemetry(raw) {
+        const r = raw && typeof raw === 'object' ? raw : {};
+        const pick = (...keys) => {
+            for (const k of keys) {
+                if (r[k] === undefined || r[k] === null || r[k] === '') continue;
+                const v = Number(r[k]);
+                return Number.isFinite(v) ? v : undefined;
+            }
+            return undefined;
+        };
+        return {
+            temperature: pick('temperature', 'temp', 'Temperature', 'TEMP'),
+            turbidity: pick('turbidity', 'turb', 'Turbidity', 'ntu', 'NTU', 'turbidity_ntu'),
+            tds: pick('tds', 'TDS', 'tds_ppm', 'TDS_ppm', 'ec_ppm'),
+            ph: pick('ph', 'pH', 'PH')
+        };
+    }
+
     class HardwareConnection {
         constructor() {
-            // Check storage for user's hardware URL, default to WebSocket mode
-            this.mode = localStorage.getItem('hw_mode') || 'WEBSOCKET'; 
-            this.websocketUrl = localStorage.getItem('hw_url') || 'ws://192.168.1.100:81'; 
-            this.restEndpoint = 'http://192.168.1.100/data';
-            this.pollingInterval = 3000; // ms
+            this.mode = localStorage.getItem('hw_mode') || 'WEBSOCKET';
+            this.websocketUrl = localStorage.getItem('hw_url') || 'ws://192.168.1.100:81';
+            this.restEndpoint = localStorage.getItem('hw_rest_url') || 'http://192.168.1.100/data';
+            this.pollingInterval = 1000;
+
+            this.lastSample = {};
 
             // DOM Elements
             this.ui = {
@@ -197,19 +298,26 @@ document.addEventListener('DOMContentLoaded', () => {
             statusEl.title = 'Click to configure hardware connection';
             
             statusEl.addEventListener('click', () => {
-                const url = prompt("Enter your Hardware WebSocket URL (e.g. ws://192.168.1.x:81)\nOr type 'MOCK' to return to simulated data:", this.websocketUrl);
-                if (url) {
-                    if (url.toUpperCase() === 'MOCK') {
-                        this.mode = 'MOCK';
-                        localStorage.setItem('hw_mode', 'MOCK');
-                    } else {
-                        this.mode = 'WEBSOCKET';
-                        this.websocketUrl = url;
-                        localStorage.setItem('hw_mode', 'WEBSOCKET');
-                        localStorage.setItem('hw_url', url);
-                    }
-                    this.init(); // Re-initialize with new settings
+                const hint = 'WebSocket (ws://…), REST JSON (http://…), or MOCK';
+                const current = this.mode === 'REST' ? this.restEndpoint : this.websocketUrl;
+                const url = prompt(`Enter hardware URL (${hint}):`, current);
+                if (!url || !url.trim()) return;
+                const trimmed = url.trim();
+                if (trimmed.toUpperCase() === 'MOCK') {
+                    this.mode = 'MOCK';
+                    localStorage.setItem('hw_mode', 'MOCK');
+                } else if (/^https?:\/\//i.test(trimmed)) {
+                    this.mode = 'REST';
+                    this.restEndpoint = trimmed;
+                    localStorage.setItem('hw_mode', 'REST');
+                    localStorage.setItem('hw_rest_url', trimmed);
+                } else {
+                    this.mode = 'WEBSOCKET';
+                    this.websocketUrl = trimmed;
+                    localStorage.setItem('hw_mode', 'WEBSOCKET');
+                    localStorage.setItem('hw_url', trimmed);
                 }
+                this.init();
             });
         }
 
@@ -278,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.status-indicator').style.backgroundColor = "var(--success)";
             document.querySelector('.system-status span').textContent = "Polling Hardware";
 
-            this.pollingIntervalId = setInterval(async () => {
+            const poll = async () => {
                 try {
                     const response = await fetch(this.restEndpoint);
                     if (!response.ok) throw new Error("Hardware unavailable");
@@ -287,7 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) {
                     console.error("REST Polling Error:", error);
                 }
-            }, this.pollingInterval);
+            };
+            poll();
+            this.pollingIntervalId = setInterval(poll, this.pollingInterval);
         }
 
         startMockData() {
@@ -299,27 +409,42 @@ document.addEventListener('DOMContentLoaded', () => {
             let mockTemp = 22.4, mockTurb = 1.2, mockTds = 145, mockPh = 7.2;
 
             this.mockIntervalId = setInterval(() => {
-                if (Math.random() > 0.5) {
-                    mockTemp += (Math.random() * 0.4 - 0.2);
-                    mockTurb += (Math.random() * 0.1 - 0.05);
-                    mockPh   += (Math.random() * 0.04 - 0.02);
-                    
-                    this.updateDashboard({
-                        temperature: mockTemp,
-                        turbidity: Math.max(0, mockTurb),
-                        tds: mockTds, 
-                        ph: Math.min(14, Math.max(0, mockPh)) 
-                    });
-                }
-            }, 3000);
+                mockTemp += Math.random() * 0.16 - 0.08;
+                mockTurb += Math.random() * 0.06 - 0.03;
+                mockTds += Math.random() * 4 - 2;
+                mockPh += Math.random() * 0.03 - 0.015;
+
+                this.updateDashboard({
+                    temperature: mockTemp,
+                    turbidity: Math.max(0, mockTurb),
+                    tds: Math.max(0, mockTds),
+                    ph: Math.min(14, Math.max(0, mockPh))
+                });
+            }, this.pollingInterval);
+        }
+
+        mergeSample(data) {
+            const n = normalizeTelemetry(data);
+            const m = { ...this.lastSample };
+            if (n.temperature !== undefined) m.temperature = n.temperature;
+            if (n.turbidity !== undefined) m.turbidity = n.turbidity;
+            if (n.tds !== undefined) m.tds = n.tds;
+            if (n.ph !== undefined) m.ph = n.ph;
+            this.lastSample = m;
+            return m;
         }
 
         updateDashboard(data) {
+            const live = this.mergeSample(data);
+
             const updateMetric = (el, value, suffix, decimals = 1) => {
-                const formatted = parseFloat(value).toFixed(decimals);
-                const current = parseFloat(el.innerText);
-                
-                if (formatted != current) {
+                if (value === undefined || value === null) return;
+                const num = parseFloat(value);
+                if (!Number.isFinite(num)) return;
+                const formatted = num.toFixed(decimals);
+                const currentNum = parseFloat(el.textContent);
+                const prev = Number.isFinite(currentNum) ? currentNum.toFixed(decimals) : null;
+                if (formatted !== prev) {
                     el.innerHTML = `${formatted}<span class="unit">${suffix}</span>`;
                     el.classList.remove('value-update');
                     void el.offsetWidth;
@@ -327,26 +452,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            if(data.temperature !== undefined) updateMetric(this.ui.temp, data.temperature, '°C');
-            if(data.turbidity !== undefined)   updateMetric(this.ui.turb, data.turbidity, 'NTU', 2);
-            if(data.tds !== undefined)         updateMetric(this.ui.tds,  data.tds, 'ppm', 0);
-            if(data.ph !== undefined) {
-                const formatted = parseFloat(data.ph).toFixed(2);
-                if(this.ui.ph.innerText !== formatted) {
-                    this.ui.ph.innerText = formatted;
+            updateMetric(this.ui.temp, live.temperature, '°C');
+            updateMetric(this.ui.turb, live.turbidity, 'NTU', 2);
+            updateMetric(this.ui.tds, live.tds, 'ppm', 0);
+
+            if (live.ph !== undefined && live.ph !== null) {
+                const phFormatted = live.ph.toFixed(2);
+                const phCurrent = parseFloat(this.ui.ph.textContent).toFixed(2);
+                if (phFormatted !== phCurrent) {
+                    this.ui.ph.textContent = phFormatted;
                     this.ui.ph.classList.remove('value-update');
                     void this.ui.ph.offsetWidth;
                     this.ui.ph.classList.add('value-update');
                 }
             }
 
-            // Trigger AI insight analysis
-            this.analyzeWaterQuality({
-                temp: data.temperature !== undefined ? data.temperature : parseFloat(this.ui.temp.innerText),
-                turb: data.turbidity !== undefined ? data.turbidity : parseFloat(this.ui.turb.innerText),
-                tds: data.tds !== undefined ? data.tds : parseFloat(this.ui.tds.innerText),
-                ph: data.ph !== undefined ? data.ph : parseFloat(this.ui.ph.innerText)
-            });
+            if (live.temperature !== undefined) {
+                pushLiveChartSample({ ...live, time: new Date() });
+
+                this.analyzeWaterQuality({
+                    temp: live.temperature,
+                    turb: live.turbidity,
+                    tds: live.tds,
+                    ph: live.ph
+                });
+            }
         }
 
         analyzeWaterQuality(metrics) {
@@ -404,7 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start the connection manager
     const hardwareTracker = new HardwareConnection();
-
 
     // ==========================================
     // SPA ROUTING & UI INTERACTIONS
