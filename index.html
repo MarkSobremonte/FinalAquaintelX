@@ -302,6 +302,45 @@
         </main>
     </div>
 
+    <!-- Connection Settings Modal -->
+    <div class="modal-overlay" id="connection-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Hardware Connection Setup</h2>
+                <button class="close-modal-btn" id="close-conn-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Select how to connect to your AquaIntelX sensor array.</p>
+                
+                <div class="conn-options">
+                    <div class="conn-card" id="conn-wifi" tabindex="0">
+                        <div class="conn-icon"><i class="ph ph-wifi-high"></i></div>
+                        <div class="conn-info">
+                            <h3>WiFi Network</h3>
+                            <p>WebSocket or REST JSON API.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="conn-card" id="conn-wired" tabindex="0">
+                        <div class="conn-icon"><i class="ph ph-usb"></i></div>
+                        <div class="conn-info">
+                            <h3>Wired (USB)</h3>
+                            <p>Direct serial connection.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="conn-details" id="wifi-config">
+                    <div class="form-group">
+                        <label>Network Address (WebSocket or REST)</label>
+                        <input type="text" id="wifi-url-input" placeholder="ws://192.168.1.100:81" />
+                    </div>
+                    <button class="btn btn-primary" id="btn-connect-wifi" style="width: 100%;">Connect to Network</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>

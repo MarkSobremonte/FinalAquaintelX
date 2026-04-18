@@ -900,3 +900,63 @@ body {
         width: 100%;
     }
 }
+
+/* Connection Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100vh;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 100;
+    display: flex;
+    align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 90%; max-width: 500px;
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(0,0,0,0.5);
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+.modal-overlay.open .modal-content { transform: translateY(0) scale(1); }
+
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 32px 16px; border-bottom: 1px solid var(--border);
+}
+.modal-header h2 { font-size: 20px; }
+.close-modal-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: color 0.2s; }
+.close-modal-btn:hover { color: var(--danger); }
+
+.modal-body { padding: 24px 32px 32px; }
+.modal-desc { color: var(--text-muted); margin-bottom: 24px; font-size: 15px; }
+
+.conn-options { display: flex; flex-direction: column; gap: 12px; }
+.conn-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer; transition: all 0.2s;
+}
+.conn-card:hover, .conn-card.active, .conn-card:focus {
+    background: var(--primary-dim); border-color: var(--primary);
+    transform: translateY(-2px); outline: none;
+}
+.conn-icon { font-size: 28px; color: var(--primary); }
+.conn-info h3 { font-size: 16px; margin-bottom: 4px; }
+.conn-info p { font-size: 13px; color: var(--text-muted); }
+
+.conn-details { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); animation: fadeIn 0.3s ease; display: none; }
+.conn-details.active { display: block; }
+
+[data-theme="light"] .modal-content { background: var(--bg-card); }
+[data-theme="light"] .conn-card { background: rgba(0,0,0,0.02); }

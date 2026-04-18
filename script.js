@@ -297,46 +297,98 @@ document.addEventListener('DOMContentLoaded', () => {
             statusEl.style.cursor = 'pointer';
             statusEl.title = 'Click to configure hardware connection';
             
+            const modal = document.getElementById('connection-modal');
+            const closeBtn = document.getElementById('close-conn-modal');
+            
             statusEl.addEventListener('click', () => {
-                const hint = 'WebSocket (ws://…), REST JSON (http://…), or MOCK';
-                const current = this.mode === 'REST' ? this.restEndpoint : this.websocketUrl;
-                const url = prompt(`Enter hardware URL (${hint}):`, current);
-                if (!url || !url.trim()) return;
-                const trimmed = url.trim();
-                if (trimmed.toUpperCase() === 'MOCK') {
-                    this.mode = 'MOCK';
-                    localStorage.setItem('hw_mode', 'MOCK');
-                } else if (/^https?:\/\//i.test(trimmed)) {
+                if(modal) {
+                    modal.classList.add('open');
+                    this.setupModalInteractions();
+                }
+            });
+            
+            if(closeBtn && modal) {
+                closeBtn.addEventListener('click', () => {
+                    modal.classList.remove('open');
+                });
+            }
+        }
+
+        setupModalInteractions() {
+            const modal = document.getElementById('connection-modal');
+            const wifiCard = document.getElementById('conn-wifi');
+            const wiredCard = document.getElementById('conn-wired');
+            const wifiConfig = document.getElementById('wifi-config');
+            const connectWifiBtn = document.getElementById('btn-connect-wifi');
+            const wifiInput = document.getElementById('wifi-url-input');
+            
+            // Set input to current
+            if(wifiInput) {
+                wifiInput.value = this.mode === 'REST' ? this.restEndpoint : this.websocketUrl;
+            }
+
+            const clearActive = () => {
+                wifiCard.classList.remove('active');
+                wiredCard.classList.remove('active');
+                wifiConfig.classList.remove('active');
+            };
+
+            wifiCard.onclick = () => {
+                clearActive();
+                wifiCard.classList.add('active');
+                wifiConfig.classList.add('active');
+            };
+
+            wiredCard.onclick = async () => {
+                clearActive();
+                wiredCard.classList.add('active');
+                modal.classList.remove('open');
+                
+                this.mode = 'SERIAL';
+                localStorage.setItem('hw_mode', 'SERIAL');
+                this.init();
+            };
+
+            connectWifiBtn.onclick = () => {
+                const url = wifiInput.value.trim();
+                if (!url) return;
+                
+                if (/^https?:\/\//i.test(url)) {
                     this.mode = 'REST';
-                    this.restEndpoint = trimmed;
+                    this.restEndpoint = url;
                     localStorage.setItem('hw_mode', 'REST');
-                    localStorage.setItem('hw_rest_url', trimmed);
+                    localStorage.setItem('hw_rest_url', url);
                 } else {
                     this.mode = 'WEBSOCKET';
-                    this.websocketUrl = trimmed;
+                    this.websocketUrl = url;
                     localStorage.setItem('hw_mode', 'WEBSOCKET');
-                    localStorage.setItem('hw_url', trimmed);
+                    localStorage.setItem('hw_url', url);
                 }
+                modal.classList.remove('open');
                 this.init();
-            });
+            };
         }
 
         init() {
             // Clean up old connections if re-initializing
             if (this.ws) { this.ws.onclose = null; this.ws.close(); }
             if (this.pollingIntervalId) clearInterval(this.pollingIntervalId);
-            if (this.mockIntervalId) clearInterval(this.mockIntervalId);
 
             document.querySelector('.status-indicator').classList.remove('active');
             document.querySelector('.system-status span').textContent = "Connecting...";
             document.querySelector('.status-indicator').style.backgroundColor = "var(--warning)";
 
+            if (this.serialReader) { 
+                try { this.serialReader.cancel(); } catch(e) {} 
+                this.serialReader = null; 
+            }
+
             if (this.mode === 'WEBSOCKET') {
                 this.connectWebSocket();
             } else if (this.mode === 'REST') {
                 this.startRestPolling();
-            } else {
-                this.startMockData();
+            } else if (this.mode === 'SERIAL') {
+                this.connectSerial();
             }
         }
 
@@ -400,28 +452,57 @@ document.addEventListener('DOMContentLoaded', () => {
             this.pollingIntervalId = setInterval(poll, this.pollingInterval);
         }
 
-        startMockData() {
-            console.log("Running in MOCK mode. No hardware connected.");
-            document.querySelector('.status-indicator').classList.add('active');
-            document.querySelector('.status-indicator').style.backgroundColor = "var(--primary)";
-            document.querySelector('.system-status span').textContent = "Mock Data (Click to Edit)";
 
-            let mockTemp = 22.4, mockTurb = 1.2, mockTds = 145, mockPh = 7.2;
 
-            this.mockIntervalId = setInterval(() => {
-                mockTemp += Math.random() * 0.16 - 0.08;
-                mockTurb += Math.random() * 0.06 - 0.03;
-                mockTds += Math.random() * 4 - 2;
-                mockPh += Math.random() * 0.03 - 0.015;
+        async connectSerial() {
+            if (!('serial' in navigator)) {
+                alert('Web Serial API not supported in this browser window. Ensure you are using Chrome/Edge via localhost or HTTPS.');
+                return;
+            }
 
-                this.updateDashboard({
-                    temperature: mockTemp,
-                    turbidity: Math.max(0, mockTurb),
-                    tds: Math.max(0, mockTds),
-                    ph: Math.min(14, Math.max(0, mockPh))
-                });
-            }, this.pollingInterval);
+            try {
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 }); // Typical default for microcontrollers
+
+                document.querySelector('.status-indicator').classList.add('active');
+                document.querySelector('.status-indicator').style.backgroundColor = "var(--success)";
+                document.querySelector('.system-status span').textContent = "USB Connected";
+
+                const textDecoder = new TextDecoderStream();
+                const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                this.serialReader = textDecoder.readable.getReader();
+
+                let accumulatedString = "";
+
+                while (true) {
+                    const { value, done } = await this.serialReader.read();
+                    if (done) break;
+
+                    accumulatedString += value;
+                    const lines = accumulatedString.split('\n');
+                    accumulatedString = lines.pop(); // Keep incomplete line at the end
+
+                    for (const line of lines) {
+                        try {
+                            const trimmed = line.trim();
+                            if (trimmed) {
+                                // Assume backend sends pure JSON like: {"temperature":22,"ph":7}
+                                const data = JSON.parse(trimmed);
+                                this.updateDashboard(data);
+                            }
+                        } catch (e) {
+                            // ignore partial/invalid json frames safely
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Serial Connection Error:", err);
+                document.querySelector('.status-indicator').classList.remove('active');
+                document.querySelector('.status-indicator').style.backgroundColor = "var(--danger)";
+                document.querySelector('.system-status span').textContent = "USB Error (Click Setup)";
+            }
         }
+
 
         mergeSample(data) {
             const n = normalizeTelemetry(data);
