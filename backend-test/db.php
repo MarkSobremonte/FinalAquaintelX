@@ -1,12 +1,20 @@
 <?php
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db   = "aquaintelx_db";
 
-$conn = new mysqli($host, $user, $pass, $db);
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$conn = new mysqli(
+    "localhost",
+    "root",
+    "",
+    "aquaintelx_db"
+);
+
+if($conn->connect_error){
+    die(json_encode([
+        "status" => "error",
+        "message" => "Database connection failed"
+    ]));
 }
+
 ?>
