@@ -1,5 +1,8 @@
 <?php
 
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+
 include "db.php";
 
 $sql = "SELECT * FROM water_quality

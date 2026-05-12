@@ -4,28 +4,33 @@ include "db.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$temp = $data["temperature"];
-$turb = $data["turbidity"];
-$tds  = $data["tds"];
-$ph   = $data["ph"];
+if (!$data || !isset($data["temperature"]) || !isset($data["turbidity"]) || !isset($data["tds"]) || !isset($data["ph"])) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Missing required data fields"
+    ]);
+    exit;
+}
 
-$sql = "INSERT INTO water_quality
-        (temperature, turbidity, tds, ph)
-        VALUES
-        ('$temp','$turb','$tds','$ph')";
+$temp = (float)$data["temperature"];
+$turb = (float)$data["turbidity"];
+$tds  = (float)$data["tds"];
+$ph   = (float)$data["ph"];
 
-if($conn->query($sql)){
+$stmt = $conn->prepare("INSERT INTO water_quality (temperature, turbidity, tds, ph) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("dddd", $temp, $turb, $tds, $ph);
 
+if($stmt->execute()){
     echo json_encode([
         "status" => "success"
     ]);
-
 }else{
-
     echo json_encode([
-        "status" => "error"
+        "status" => "error",
+        "message" => "Failed to insert data: " . $stmt->error
     ]);
-
 }
+
+$stmt->close();
 
 ?>

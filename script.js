@@ -539,7 +539,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (live.ph !== undefined && live.ph !== null) {
                 const phFormatted = live.ph.toFixed(2);
-                const phCurrent = parseFloat(this.ui.ph.textContent).toFixed(2);
+                const currentText = this.ui.ph.textContent;
+                const phCurrent = currentText && !isNaN(parseFloat(currentText)) ? parseFloat(currentText).toFixed(2) : null;
                 if (phFormatted !== phCurrent) {
                     this.ui.ph.textContent = phFormatted;
                     this.ui.ph.classList.remove('value-update');
@@ -715,26 +716,38 @@ async function loadDatabaseData(){
     try{
 
         const response = await fetch(
-            "http://localhost/aquaintelx/backend/get_latest.php"
+            "backend-test/get_latest.php"
         );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const data = await response.json();
 
-        document.getElementById("temp-val").innerHTML =
-            data.temperature + '<span class="unit">°C</span>';
+        if (data.temperature !== undefined) {
+            document.getElementById("temp-val").innerHTML =
+                data.temperature + '<span class="unit">°C</span>';
+        }
 
-        document.getElementById("turb-val").innerHTML =
-            data.turbidity + '<span class="unit">NTU</span>';
+        if (data.turbidity !== undefined) {
+            document.getElementById("turb-val").innerHTML =
+                data.turbidity + '<span class="unit">NTU</span>';
+        }
 
-        document.getElementById("tds-val").innerHTML =
-            data.tds + '<span class="unit">ppm</span>';
+        if (data.tds !== undefined) {
+            document.getElementById("tds-val").innerHTML =
+                data.tds + '<span class="unit">ppm</span>';
+        }
 
-        document.getElementById("ph-val").innerHTML =
-            data.ph;
+        if (data.ph !== undefined) {
+            document.getElementById("ph-val").innerHTML =
+                data.ph;
+        }
 
     }catch(error){
 
-        console.log(error);
+        console.log("Failed to load database data:", error);
 
     }
 
