@@ -6,10 +6,11 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
 $conn = new mysqli(
-    "localhost",
+    "127.0.0.1",
     "root",
     "",
-    "aquaintelx_db"
+    "aquaintelx_db",
+    3306
 );
 
 if($conn->connect_error){

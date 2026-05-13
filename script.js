@@ -715,8 +715,12 @@ async function loadDatabaseData(){
 
     try{
 
+        const backendBase = window.location.protocol.startsWith('http') && window.location.host
+            ? window.location.origin
+            : 'http://localhost:8000';
+
         const response = await fetch(
-            "backend-test/get_latest.php"
+            `${backendBase}/backend-test/get_latest.php`
         );
 
         if (!response.ok) {
