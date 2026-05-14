@@ -711,50 +711,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-async function loadDatabaseData(){
+async function fetchSensorData(){
 
-    try{
+    const response =
+        await fetch("get_sensor_data.php");
 
-        const backendBase = window.location.protocol.startsWith('http') && window.location.host
-            ? window.location.origin
-            : 'http://localhost:8000';
+    const data = await response.json();
 
-        const response = await fetch(
-            `${backendBase}/backend-test/get_latest.php`
-        );
+    document.getElementById("temp-val")
+        .innerHTML = data.temperature + "°C";
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    document.getElementById("turb-val")
+        .innerHTML = data.turbidity + " NTU";
 
-        const data = await response.json();
+    document.getElementById("tds-val")
+        .innerHTML = data.tds + " ppm";
 
-        if (data.temperature !== undefined) {
-            document.getElementById("temp-val").innerHTML =
-                data.temperature + '<span class="unit">°C</span>';
-        }
-
-        if (data.turbidity !== undefined) {
-            document.getElementById("turb-val").innerHTML =
-                data.turbidity + '<span class="unit">NTU</span>';
-        }
-
-        if (data.tds !== undefined) {
-            document.getElementById("tds-val").innerHTML =
-                data.tds + '<span class="unit">ppm</span>';
-        }
-
-        if (data.ph !== undefined) {
-            document.getElementById("ph-val").innerHTML =
-                data.ph;
-        }
-
-    }catch(error){
-
-        console.log("Failed to load database data:", error);
-
-    }
-
+    document.getElementById("ph-val")
+        .innerHTML = data.ph;
 }
 
-setInterval(loadDatabaseData, 3000);
+setInterval(fetchSensorData, 2000);
