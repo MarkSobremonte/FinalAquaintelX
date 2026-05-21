@@ -1,5 +1,5 @@
 <?php
-include "db.php";
+include 'db.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -8,14 +8,19 @@ $turb = $data['turbidity'];
 $tds = $data['tds'];
 $ph = $data['ph'];
 
-$sql = "INSERT INTO sensor_logs
+$sql = "INSERT INTO sensor_logs 
 (temperature, turbidity, tds, ph)
 VALUES
-('$temp', '$turb', '$tds', '$ph')";
+('$temp','$turb','$tds','$ph')";
 
-if($conn->query($sql)){
+if(mysqli_query($conn, $sql)){
     echo json_encode([
         "status" => "success"
     ]);
+}else{
+    echo json_encode([
+        "status" => "error"
+    ]);
 }
+
 ?>

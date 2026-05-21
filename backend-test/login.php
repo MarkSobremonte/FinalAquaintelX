@@ -117,59 +117,54 @@
                 <p>Sign in to access real-time telemetry</p>
             </div>
             
- <form class="login-form" id="loginForm">
-
-    <div class="form-group">
-        <label>Email Address</label>
-        <input type="email" id="email" required>
-    </div>
-
-    <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="password" required>
-    </div>
-
-    <button type="submit" class="btn btn-primary">
-        Login
-    </button>
-
-</form>
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" placeholder="admin@aquaintelx.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="••••••••" required>
+                </div>
+                <div class="form-footer">
+                    <label class="checkbox-group">
+                        <input type="checkbox" checked>
+                        <span>Remember me</span>
+                    </label>
+                    <a href="#">Forgot password?</a>
+                </div>
+                <button type="submit" class="btn btn-primary" id="login-btn">
+                    <i class="ph ph-sign-in"></i> Access Dashboard
+                </button>
+            </form>
         </div>
     </div>
 
-<script>
-document.getElementById("loginForm")
-.addEventListener("submit", async function(e){
+ <script>
+
+const loginForm = document.getElementById("loginForm");
+
+loginForm.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    const formData = new FormData();
+    const formData = new FormData(loginForm);
 
-    formData.append("email",
-        document.getElementById("email").value);
-
-    formData.append("password",
-        document.getElementById("password").value);
-
-    const response = await fetch(
-        "auth_login.php",
-        {
-            method: "POST",
-            body: formData
-        }
-    );
+    const response = await fetch("backend/login_process.php", {
+        method: "POST",
+        body: formData
+    });
 
     const data = await response.json();
 
     if(data.status === "success"){
-
         window.location.href = "index.php";
-
-    } else {
-
+    }else{
         alert(data.message);
     }
+
 });
+
 </script>
 </body>
 </html>

@@ -539,8 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (live.ph !== undefined && live.ph !== null) {
                 const phFormatted = live.ph.toFixed(2);
-                const currentText = this.ui.ph.textContent;
-                const phCurrent = currentText && !isNaN(parseFloat(currentText)) ? parseFloat(currentText).toFixed(2) : null;
+                const phCurrent = parseFloat(this.ui.ph.textContent).toFixed(2);
                 if (phFormatted !== phCurrent) {
                     this.ui.ph.textContent = phFormatted;
                     this.ui.ph.classList.remove('value-update');
@@ -711,24 +710,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-async function fetchSensorData(){
 
-    const response =
-        await fetch("get_sensor_data.php");
+async function getLiveData() {
 
+    const response = await fetch('backend/fetch_sensor.php');
     const data = await response.json();
 
-    document.getElementById("temp-val")
-        .innerHTML = data.temperature + "°C";
-
-    document.getElementById("turb-val")
-        .innerHTML = data.turbidity + " NTU";
-
-    document.getElementById("tds-val")
-        .innerHTML = data.tds + " ppm";
-
-    document.getElementById("ph-val")
-        .innerHTML = data.ph;
+    hardwareTracker.updateDashboard(data);
 }
 
-setInterval(fetchSensorData, 2000);
+setInterval(getLiveData, 1000);
