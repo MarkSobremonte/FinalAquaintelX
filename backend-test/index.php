@@ -1,7 +1,4 @@
-<?php
-include 'backend/auth.php';
-?>
-
+<?php require_once 'auth_check.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +42,7 @@ include 'backend/auth.php';
                     <i class="ph ph-envelope-simple"></i>
                     <span>Contact</span>
                 </a>
-                <a href="login.html" class="nav-item" id="logout-btn" style="margin-top: auto; color: var(--danger);">
+                <a href="logout.php" class="nav-item" id="logout-btn" style="margin-top: auto; color: var(--danger);">
                     <i class="ph ph-sign-out"></i>
                     <span>Sign Out</span>
                 </a>
@@ -65,6 +62,7 @@ include 'backend/auth.php';
                     </div>
                 </div>
                 <div class="header-actions">
+                    <div id="db-stats-summary" style="font-size:13px;color:var(--text-muted);display:none;"></div>
                     <div class="system-status">
                         <div class="status-indicator active"></div>
                         <span>System Online</span>
@@ -190,7 +188,7 @@ include 'backend/auth.php';
                     <div class="panel-header">
                         <h3>Historical Logs</h3>
                         <div class="header-actions-inline">
-                            <button class="btn btn-outline"><i class="ph ph-download-simple"></i> Export CSV</button>
+                            <a href="export_csv.php?range=24h" class="btn btn-outline" id="export-btn"><i class="ph ph-download-simple"></i> Export CSV</a>
                             <button class="btn btn-primary"><i class="ph ph-funnel"></i> Filter</button>
                         </div>
                     </div>
@@ -217,6 +215,18 @@ include 'backend/auth.php';
                             </tbody>
                         </table>
                     </div>
+                    <div id="history-pagination" style="
+                        display:flex; justify-content:space-between; align-items:center;
+                        padding:16px 0 0; gap:12px; flex-wrap:wrap;">
+                    </div>
+                </div>
+                <!-- DB Stats Summary Panel -->
+                <div class="panel" style="margin-top:24px;">
+                    <h3 style="margin-bottom:16px;font-size:16px;">
+                        <i class="ph ph-chart-bar" style="color:var(--primary);margin-right:8px;"></i>
+                        Database Summary Statistics
+                    </h3>
+                    <div id="db-stats-summary"></div>
                 </div>
             </div>
 

@@ -1,170 +1,127 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AquaIntelX</title>
-    <!-- Use Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Inline specific login styles */
-        .login-page {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: radial-gradient(circle at top right, rgba(0, 229, 255, 0.1), transparent 50%),
-                        radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.1), transparent 50%),
-                        var(--bg-main);
-        }
-        
-        [data-theme="light"] .login-page {
-            background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.1), transparent 50%),
-                        radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.1), transparent 50%),
-                        var(--bg-main);
-        }
+<?php
+// ============================================================
+// login.php — Authentication Handler
+// ============================================================
+declare(strict_types=1);
 
-        .login-wrapper {
-            width: 100%;
-            max-width: 440px;
-            padding: 24px;
-            z-index: 1;
-        }
+require_once 'config.php';
 
-        .login-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
+// ── Helpers ───────────────────────────────────────────────
+function jsonResponse(bool $success, string $message, array $extra = []): void {
+    header('Content-Type: application/json');
+    echo json_encode(array_merge(['success' => $success, 'message' => $message], $extra));
+    exit;
+}
 
-        .login-header .brand-large {
-            justify-content: center;
-            margin-bottom: 16px;
-        }
+function logLoginAttempt(PDO $pdo, ?int $userId, string $email, string $status): void {
+    $stmt = $pdo->prepare(
+        'INSERT INTO login_logs (user_id, email, ip_address, user_agent, status)
+         VALUES (:uid, :email, :ip, :ua, :status)'
+    );
+    $stmt->execute([
+        ':uid'    => $userId,
+        ':email'  => $email,
+        ':ip'     => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        ':ua'     => substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+        ':status' => $status,
+    ]);
+}
 
-        .login-header p {
-            color: var(--text-muted);
-            font-size: 15px;
-        }
-        
-        .login-form .form-group {
-            margin-bottom: 20px;
-        }
+// ── Redirect if already logged in ─────────────────────────
+if (!empty($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit;
+}
 
-        .login-form .btn-primary {
-            width: 100%;
-            justify-content: center;
-            padding: 14px;
-            font-size: 16px;
-            margin-top: 12px;
-        }
+// ── Handle POST (AJAX or form submit) ─────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-        .form-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
+    // Support both JSON body (fetch) and normal form POST
+    $isJson   = str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json');
+    $body     = $isJson ? json_decode(file_get_contents('php://input'), true) : $_POST;
 
-        .form-footer a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .form-footer a:hover {
-            text-decoration: underline;
-        }
+    $email    = trim($body['email']    ?? '');
+    $password = trim($body['password'] ?? '');
 
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-
-        .checkbox-group input {
-            cursor: pointer;
-            accent-color: var(--primary);
-            width: 16px;
-            height: 16px;
-        }
-
-        @media (max-width: 480px) {
-            .panel {
-                padding: 24px !important;
-            }
-            .login-header .brand-text {
-                font-size: 28px;
-            }
-        }
-    </style>
-</head>
-<body class="login-page">
-    <div class="login-wrapper">
-        <div class="panel">
-            <div class="login-header">
-                <div class="brand-large">
-                    <i class="ph ph-waves brand-icon" style="color: var(--primary);"></i>
-                    <span class="brand-text">AquaIntelX</span>
-                </div>
-                <p>Sign in to access real-time telemetry</p>
-            </div>
-            
-            <form class="login-form" id="loginForm">
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" placeholder="admin@aquaintelx.com" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" placeholder="••••••••" required>
-                </div>
-                <div class="form-footer">
-                    <label class="checkbox-group">
-                        <input type="checkbox" checked>
-                        <span>Remember me</span>
-                    </label>
-                    <a href="#">Forgot password?</a>
-                </div>
-                <button type="submit" class="btn btn-primary" id="login-btn">
-                    <i class="ph ph-sign-in"></i> Access Dashboard
-                </button>
-            </form>
-        </div>
-    </div>
-
- <script>
-
-const loginForm = document.getElementById("loginForm");
-
-loginForm.addEventListener("submit", async (e) => {
-
-    e.preventDefault();
-
-    const formData = new FormData(loginForm);
-
-    const response = await fetch("backend/login_process.php", {
-        method: "POST",
-        body: formData
-    });
-
-    const data = await response.json();
-
-    if(data.status === "success"){
-        window.location.href = "index.php";
-    }else{
-        alert(data.message);
+    // ── Basic validation ──────────────────────────────────
+    if (empty($email) || empty($password)) {
+        jsonResponse(false, 'Email and password are required.');
     }
 
-});
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        jsonResponse(false, 'Invalid email format.');
+    }
 
-</script>
-</body>
-</html>
+    // ── Rate limiting (simple: max 5 failed attempts / 15 min per IP) ──
+    try {
+        $pdo  = getDB();
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) AS attempts
+               FROM login_logs
+              WHERE ip_address = :ip
+                AND status     = 'failed'
+                AND created_at > NOW() - INTERVAL 15 MINUTE"
+        );
+        $stmt->execute([':ip' => $_SERVER['REMOTE_ADDR'] ?? '']);
+        $row = $stmt->fetch();
+
+        if ((int)$row['attempts'] >= 5) {
+            jsonResponse(false, 'Too many failed attempts. Please wait 15 minutes.');
+        }
+    } catch (PDOException $e) {
+        error_log('DB error (rate-limit): ' . $e->getMessage());
+        jsonResponse(false, 'A database error occurred. Please try again.');
+    }
+
+    // ── Look up user ──────────────────────────────────────
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT id, name, email, password, role, is_active
+               FROM users
+              WHERE email = :email
+              LIMIT 1'
+        );
+        $stmt->execute([':email' => $email]);
+        $user = $stmt->fetch();
+
+        // Constant-time path: verify even if no user found (prevents timing attack)
+        $hash = $user['password'] ?? '$2y$12$invalidsaltinvalidsaltinvalidsalt.invalid';
+        $passwordOk = password_verify($password, $hash);
+
+        if (!$user || !$passwordOk) {
+            logLoginAttempt($pdo, null, $email, 'failed');
+            jsonResponse(false, 'Invalid email or password.');
+        }
+
+        if (!(bool)$user['is_active']) {
+            logLoginAttempt($pdo, (int)$user['id'], $email, 'failed');
+            jsonResponse(false, 'Your account has been deactivated. Contact support.');
+        }
+
+        // ── Success ───────────────────────────────────────
+        logLoginAttempt($pdo, (int)$user['id'], $email, 'success');
+
+        // Regenerate session ID to prevent session fixation
+        session_regenerate_id(true);
+
+        $_SESSION['user_id']   = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['user_email']= $user['email'];
+        $_SESSION['logged_in_at'] = time();
+
+        jsonResponse(true, 'Login successful.', [
+            'name'     => $user['name'],
+            'role'     => $user['role'],
+            'redirect' => 'index.php',
+        ]);
+
+    } catch (PDOException $e) {
+        error_log('DB error (login): ' . $e->getMessage());
+        jsonResponse(false, 'A database error occurred. Please try again.');
+    }
+}
+
+// ── Non-POST: just redirect to login page ─────────────────
+header('Location: login.html');
+exit;

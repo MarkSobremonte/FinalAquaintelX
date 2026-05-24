@@ -1,11 +1,8 @@
 // Initialize Chart.js
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Enforce authentication
-    if (localStorage.getItem('isAuthenticated') !== 'true') {
-        window.location.replace('login.html');
-        return; // Stop rendering
-    }
+    // Authentication is now handled server-side by auth_check.php (included in index.php).
+    // No localStorage check needed here anymore.
 
     const ctx = document.getElementById('trendsChart').getContext('2d');
     
@@ -678,15 +675,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Handle explicit log out
-    const logoutBtn = document.getElementById('logout-btn');
-    if(logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('isAuthenticated');
-        });
-    }
+    // Logout is handled by logout.php (href on the sidebar link).
+    // No localStorage manipulation needed.
 
-    // Form submission simulation
+    // Form submission simulation (contact form - no backend needed)
     const contactForm = document.getElementById('contactForm');
     if(contactForm) {
         contactForm.addEventListener('submit', (e) => {
@@ -709,14 +701,214 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1500);
         });
     }
+
+    // ==========================================
+    // DATABASE INTEGRATION
+    // Loads history table + chart from sensor_api.php
+    // and syncs live hardware readings back to DB.
+    // ==========================================
+
+    // ── History Table ─────────────────────────────────────
+    const historyTbody = document.getElementById('history-table-body');
+    let currentPage    = 1;
+    let currentRange   = '24h';
+
+    async function loadHistory(page = 1) {
+        if (!historyTbody) return;
+        historyTbody.innerHTML = `
+            <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                <i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
+                Loading data from database...
+            </td></tr>`;
+        try {
+            const res  = await fetch(`sensor_api.php?action=history&limit=50&page=${page}`);
+            const data = await res.json();
+
+            if (!data.success || !data.data.length) {
+                historyTbody.innerHTML = `
+                    <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                        <i class="ph ph-plugs" style="font-size:2rem;margin-bottom:.5rem;display:block;"></i>
+                        No historical data yet. Connect hardware to start logging.
+                    </td></tr>`;
+                return;
+            }
+
+            historyTbody.innerHTML = data.data.map(row => {
+                const ts     = new Date(row.recorded_at);
+                const tsStr  = ts.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'medium' });
+                const badge  = `<span class="status-badge ${row.status}">${row.status}</span>`;
+                const fmt    = (v, d=1) => v !== null ? parseFloat(v).toFixed(d) : '—';
+                return `<tr>
+                    <td>${tsStr}</td>
+                    <td>${row.sensor_node}</td>
+                    <td>${fmt(row.temperature)}</td>
+                    <td>${fmt(row.turbidity, 2)}</td>
+                    <td>${fmt(row.ph, 2)}</td>
+                    <td>${fmt(row.tds, 0)}</td>
+                    <td>${badge}</td>
+                </tr>`;
+            }).join('');
+
+            // Update pagination if controls exist
+            const paginationEl = document.getElementById('history-pagination');
+            if (paginationEl && data.meta) {
+                currentPage = data.meta.page;
+                paginationEl.innerHTML = `
+                    <span style="color:var(--text-muted);font-size:14px;">
+                        Page ${data.meta.page} of ${data.meta.total_pages} &nbsp;|&nbsp; ${data.meta.total} readings
+                    </span>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-outline" ${page <= 1 ? 'disabled' : ''} onclick="window._loadHistory(${page-1})">
+                            <i class="ph ph-caret-left"></i> Prev
+                        </button>
+                        <button class="btn btn-outline" ${page >= data.meta.total_pages ? 'disabled' : ''} onclick="window._loadHistory(${page+1})">
+                            Next <i class="ph ph-caret-right"></i>
+                        </button>
+                    </div>`;
+            }
+
+        } catch (err) {
+            historyTbody.innerHTML = `
+                <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--danger);">
+                    <i class="ph ph-warning" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>
+                    Could not load data: ${err.message}
+                </td></tr>`;
+        }
+    }
+
+    // Expose for pagination buttons
+    window._loadHistory = loadHistory;
+
+    // ── Chart Data from DB ────────────────────────────────
+    async function loadChartFromDB(range = '24h') {
+        try {
+            const res  = await fetch(`sensor_api.php?action=chart&range=${range}`);
+            const data = await res.json();
+            if (!data.success || !data.data.length) return;
+
+            // Replace chart data with DB values
+            chartTimeLabels.length = 0;
+            tempSeries.length = 0;
+            turbSeries.length = 0;
+            tdsSeries.length  = 0;
+            phSeries.length   = 0;
+
+            data.data.forEach(row => {
+                const ts = new Date(row.recorded_at);
+                chartTimeLabels.push(ts.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }));
+                tempSeries.push(row.temperature !== null ? parseFloat(row.temperature) : null);
+                turbSeries.push(row.turbidity   !== null ? parseFloat(row.turbidity)   : null);
+                tdsSeries.push(row.tds          !== null ? parseFloat(row.tds)         : null);
+                phSeries.push(row.ph            !== null ? parseFloat(row.ph)          : null);
+            });
+
+            trendsChart.update();
+        } catch (err) {
+            console.warn('Could not load chart data from DB:', err);
+        }
+    }
+
+    // ── Stats Summary ─────────────────────────────────────
+    async function loadStats(range = '24h') {
+        try {
+            const res  = await fetch(`sensor_api.php?action=stats&range=${range}`);
+            const data = await res.json();
+            if (!data.success || !data.data) return;
+
+            const s = data.data;
+            const statsEl = document.getElementById('db-stats-summary');
+            if (!statsEl) return;
+
+            const fmtRow = (label, avg, min, max, unit) =>
+                `<tr>
+                    <td style="font-weight:500;color:var(--text-main)">${label}</td>
+                    <td>${avg ?? '—'} ${unit}</td>
+                    <td>${min ?? '—'} ${unit}</td>
+                    <td>${max ?? '—'} ${unit}</td>
+                </tr>`;
+
+            statsEl.innerHTML = `
+                <table style="width:100%;font-size:14px;border-collapse:collapse;">
+                    <thead>
+                        <tr style="color:var(--text-muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;">
+                            <th style="text-align:left;padding:8px 0;">Parameter</th>
+                            <th>Avg</th><th>Min</th><th>Max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${fmtRow('Temperature', s.avg_temp, s.min_temp, s.max_temp, '°C')}
+                        ${fmtRow('Turbidity',   s.avg_turb, s.min_turb, s.max_turb, 'NTU')}
+                        ${fmtRow('TDS',         s.avg_tds,  s.min_tds,  s.max_tds,  'ppm')}
+                        ${fmtRow('pH',          s.avg_ph,   s.min_ph,   s.max_ph,   '')}
+                    </tbody>
+                </table>
+                <p style="margin-top:12px;font-size:13px;color:var(--text-muted);">
+                    <i class="ph ph-database"></i> ${s.total_readings ?? 0} readings in last ${range} &nbsp;|&nbsp;
+                    <span style="color:var(--warning)">${s.warning_count ?? 0} warnings</span> &nbsp;
+                    <span style="color:var(--danger)">${s.critical_count ?? 0} critical</span>
+                </p>`;
+        } catch(err) {
+            console.warn('Stats load error:', err);
+        }
+    }
+
+    // ── Auto-save live hardware reading to DB ─────────────
+    // Intercept pushLiveChartSample to also persist to DB
+    const _origPushLive = pushLiveChartSample;
+    let _dbSaveThrottle = 0;
+    window._pushLiveAndSave = function(sample) {
+        _origPushLive(sample);
+        // Save to DB at most once every 5 seconds to avoid flooding
+        const now = Date.now();
+        if (now - _dbSaveThrottle > 5000) {
+            _dbSaveThrottle = now;
+            fetch('sensor_api.php?action=manual', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    sensor_node: 'NODE-01',
+                    temperature: sample.temperature ?? null,
+                    turbidity:   sample.turbidity   ?? null,
+                    tds:         sample.tds         ?? null,
+                    ph:          sample.ph          ?? null,
+                })
+            }).catch(() => {}); // silent fail — hardware connection is primary
+        }
+    };
+
+    // ── Time-filter for chart/history ─────────────────────
+    const timeFilterSelect = document.querySelector('.time-filter');
+    if (timeFilterSelect) {
+        timeFilterSelect.addEventListener('change', () => {
+            const map = { 'Last 24 Hours': '24h', 'Last 7 Days': '7d', 'Last 30 Days': '30d' };
+            const range = map[timeFilterSelect.value] || '24h';
+            loadChartFromDB(range);
+            loadStats(range);
+        });
+    }
+
+    // ── Nav change: load history when switching to History tab ──
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const target = item.getAttribute('data-target');
+            if (target === 'history') {
+                loadHistory(1);
+            }
+        });
+    });
+
+    // ── Initial load ──────────────────────────────────────
+    loadChartFromDB('24h');
+    loadStats('24h');
+    // Load history immediately if we start on that tab
+    if (document.getElementById('history')?.classList.contains('active')) {
+        loadHistory(1);
+    }
+
+    // Refresh history & stats every 30 seconds in the background
+    setInterval(() => {
+        loadHistory(currentPage);
+        loadStats(currentRange);
+    }, 30000);
+
 });
-
-async function getLiveData() {
-
-    const response = await fetch('backend/fetch_sensor.php');
-    const data = await response.json();
-
-    hardwareTracker.updateDashboard(data);
-}
-
-setInterval(getLiveData, 1000);
