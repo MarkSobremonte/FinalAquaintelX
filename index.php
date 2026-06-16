@@ -239,7 +239,7 @@
                             <span class="brand-text">AquaIntelX</span>
                         </div>
                         <h2>Next-Gen Water Quality Monitoring</h2>
-                        <p>AquaIntelX leverages advanced machine learning algorithms and high-frequency IoT sensors to provide real-time, actionable insights into municipal and industrial water supplies.</p>
+                        <p>AquaIntelX leverages machine learning algorithms and IoT sensors to provide real-time, actionable insights into municipal and industrial water supplies.</p>
                         <p>Our mission is to proactively identify contaminants and anomalies before they impact public health or operational integrity.</p>
                     </div>
                     <div class="panel stats-panel">
@@ -271,15 +271,15 @@
                         <div class="info-list">
                             <div class="info-item">
                                 <i class="ph ph-map-pin"></i>
-                                <span>1200 Innovation Drive, Tech District</span>
+                                <span>Polytechnique University of the Philippines</span>
                             </div>
                             <div class="info-item">
                                 <i class="ph ph-envelope-simple"></i>
-                                <span>support@aquaintelx.com</span>
+                                <span>AquaIntelX2026@gmail.com</span>
                             </div>
                             <div class="info-item">
                                 <i class="ph ph-phone"></i>
-                                <span>+1 (800) 555-0199</span>
+                                <span>09660725867</span>
                             </div>
                         </div>
                     </div>
@@ -287,7 +287,7 @@
                         <form class="contact-form" id="contactForm">
                             <div class="form-group">
                                 <label>Name</label>
-                                <input type="text" placeholder="John Doe" required>
+                                <input type="text" placeholder="Mark Sobremonte" required>
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
